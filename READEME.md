@@ -1,67 +1,60 @@
-# test_joint_control_gazebo
+# ur_arm_test
 
 ![ROS](https://img.shields.io/badge/ROS-Noetic-blue) ![License](https://img.shields.io/badge/License-MIT-green)
 
-`test_joint_control_gazebo` is an example ROS package designed to control and monitor a 7-degree-of-freedom (7-DoF) robotic arm in a Gazebo simulation environment. It includes a publisher node to send joint position commands and a subscriber node to receive joint state data. The robotic arm model used in this package is sourced from the [Mastering ROS for Robotics Programming - Third Edition](https://github.com/PacktPublishing/Mastering-ROS-for-Robotics-Programming-Third-edition) repository.
+`ur_arm_test` is a ROS package for testing and simulating the control of a Universal Robots (UR) 7-DoF robotic arm. It provides example nodes for various types of joint control, real-time trajectory publishing, and MoveIt integration, mainly for use in Gazebo simulation environments.
 
-## Purpose
-- **Joint Control**: Send position commands to specific joints to control the robotic arm.
-- **State Monitoring**: Receive joint state data (`joint_states`) published by Gazebo to monitor the robot's current state.
-- **Learning & Testing**: Provide an example for studying robot control and communication with ROS and Gazebo.
+## Main Purpose
+- **Joint Trajectory Control**: Test joint trajectory commands using action server/client.
+- **Real-Time Control**: Example for real-time trajectory publishing.
+- **MoveIt Integration**: Example for position control using MoveIt.
+- **ROS/Gazebo Practice**: Example nodes for learning and testing UR arm control in ROS and Gazebo.
 
 ## Package Structure
 ```
-test_joint_control_gazebo/
+ur_arm_test/
 ├── src/
-│   ├── test_joint_control_publisher.cpp  # Joint position command publisher
-│   └── test_joint_control_subscriber.cpp # Joint state subscriber
-├── include/                              # (Optional headers if needed)
-├── CMakeLists.txt                       # Build configuration
-├── package.xml                          # Package metadata
-└── README.md                            # This file
+│   ├── test_ur_joint_traj_action.cpp
+│   ├── test_ur_joint_traj_realtime.cpp
+│   ├── test_ur_joint_trajectory_publisher_node.cpp
+│   └── test_ur_position_moveit.cpp
+├── include/
+├── CMakeLists.txt
+├── package.xml
+└── README.md
 ```
 
 ## Dependencies
-- ROS (Tested on Noetic)
-- `roscpp`
-- `std_msgs`
-- `sensor_msgs`
-- Robot model from [Mastering ROS for Robotics Programming - Third Edition](https://github.com/PacktPublishing/Mastering-ROS-for-Robotics-Programming-Third-edition)
+- ROS Noetic
+- `roscpp`, `std_msgs`, `sensor_msgs`, `trajectory_msgs`, `control_msgs`, `moveit_ros_planning_interface`, etc.
+- Universal Robots model and Gazebo/MoveIt environment from [ros-industrial/universal_robot](https://github.com/ros-industrial/universal_robot)
 
-## Installation
+## Installation & Build
 
-### 1. Install ROS
-If ROS is not installed, follow the [official ROS installation guide](http://wiki.ros.org/ROS/Installation). For example:
-```bash
-sudo apt-get install ros-noetic-desktop-full
-```
+### 1. Install ROS Noetic
+Refer to the [official ROS installation guide](http://wiki.ros.org/ROS/Installation).
 
-### 2. Create a Workspace
+### 2. Create and Move to Workspace
 ```bash
 mkdir -p ~/catkin_ws/src
 cd ~/catkin_ws/src
 ```
 
-### 3. Clone the Robot Model
-Clone the robot model repository from [Mastering ROS for Robotics Programming - Third Edition](https://github.com/PacktPublishing/Mastering-ROS-for-Robotics-Programming-Third-edition):
+### 3. Clone the Packages
+Clone both the `universal_robot` package (for simulation and MoveIt config) and this package:
 ```bash
-git clone https://github.com/PacktPublishing/Mastering-ROS-for-Robotics-Programming-Third-edition.git
-```
-- The relevant package (`seven_dof_arm_gazebo`) will be used for the Gazebo simulation.
-
-### 4. Clone This Package
-Clone this repository into the same workspace:
-```bash
-git clone https://github.com/IRaC-Lab/test_joint_control_gazebo.git
+git clone https://github.com/ros-industrial/universal_robot.git
+# Clone the UR3_ROS_TEST package
+git clone https://github.com/IRaC-Lab/UR3_ROS_TEST.git
 ```
 
-### 5. Install Dependencies
+### 4. Install Dependencies
 ```bash
 cd ~/catkin_ws
 rosdep install --from-paths src --ignore-src -r -y
 ```
 
-### 6. Build the Workspace
+### 5. Build
 ```bash
 catkin_make
 source devel/setup.bash
@@ -69,68 +62,51 @@ source devel/setup.bash
 
 ## Usage
 
-### Prerequisites
-- The 7-DoF robotic arm model and Gazebo simulation environment are provided by the `seven_dof_arm_gazebo` package from the [Mastering ROS for Robotics Programming - Third Edition](https://github.com/PacktPublishing/Mastering-ROS-for-Robotics-Programming-Third-edition) repository. Ensure this package is built and its launch file (`seven_dof_arm_gazebo_control.launch`) is available:
-  ```bash
-  roslaunch seven_dof_arm_gazebo seven_dof_arm_gazebo_control.launch
-  ```
+### 1. Launch Gazebo Simulation and MoveIt (using universal_robot)
+- Use the launch files provided by the `universal_robot` package for Gazebo simulation and MoveIt configuration. For example:
+```bash
+roslaunch ur_gazebo ur5e.launch
+# or for MoveIt
+roslaunch ur5e_moveit_config ur5e_moveit_planning_execution.launch
+```
+- Make sure the correct robot model (e.g., ur5e, ur10, etc.) is specified as needed.
 
-### 1. Joint Position Control (Publisher)
-- **File**: `src/test_joint_control_publisher.cpp`
-- **Function**: Publishes joint position commands to a specified joint's control topic (`/seven_dof_arm/jointX_position_controller/command`) based on user input.
-- **Run**:
-  ```bash
-  rosrun test_joint_control_gazebo test_joint_control_publisher <joint_number> <angle>
-  ```
-  - `<joint_number>`: Joint number between 1 and 7.
-  - `<angle>`: Target angle in radians.
-  - Example: Move `joint4` to 90 degrees (1.57 radians):
-    ```bash
-    rosrun test_joint_control_gazebo test_joint_control_publisher 4 1.57
-    ```
-- **Behavior**: Continuously publishes (10 Hz) the specified angle to the joint and logs the sent value to the console.
+### 2. Run Joint Trajectory Action Client Example
+```bash
+rosrun ur_arm_test test_ur_joint_traj_action
+```
+- Sends target values to the JointTrajectoryAction server.
 
-### 2. Joint State Monitoring (Subscriber)
-- **File**: `src/test_joint_control_subscriber.cpp`
-- **Function**: Subscribes to the `/seven_dof_arm/joint_states` topic and prints the name and position of the first joint (`joint1`).
-- **Run**:
-  ```bash
-  rosrun test_joint_control_gazebo test_joint_control_subscriber
-  ```
-- **Behavior**: Outputs the name and position of `elbow_pitch_joint` to the console whenever a new `joint_states` message is received.
+### 3. Run Real-Time Joint Trajectory Publisher
+```bash
+rosrun ur_arm_test test_ur_joint_traj_realtime
+```
+- Publishes joint trajectory commands in real time.
 
-### 3. Full Test
-1. Start the Gazebo simulation with the 7-DoF arm model:
-   ```bash
-   roslaunch seven_dof_arm_gazebo seven_dof_arm_gazebo_control.launch
-   ```
-2. Run the publisher (e.g., set joint4 to 1.57 radians):
-   ```bash
-   rosrun test_joint_control_gazebo test_joint_control_publisher 4 1.57
-   ```
-3. Run the subscriber:
-   ```bash
-   rosrun test_joint_control_gazebo test_joint_control_subscriber
-   ```
-   - Check the terminal for `elbow_pitch_joint` state output and observe the robot's movement in Gazebo.
+### 4. Run JointTrajectory Publisher Node
+```bash
+rosrun ur_arm_test test_ur_joint_trajectory_publisher_node
+```
+- Publishes trajectory commands for single or multiple joints.
 
-## Topics
-- **Published**: `/seven_dof_arm/jointX_position_controller/command` (`std_msgs/Float64`)
-  - `X` is the joint number (1 to 7).
-- **Subscribed**: `/seven_dof_arm/joint_states` (`sensor_msgs/JointState`)
+### 5. Run MoveIt-based Position Control Example
+```bash
+rosrun ur_arm_test test_ur_position_moveit
+```
+- Uses MoveIt interface for target position control.
+
+## Main Topics & Actions
+- **Published**: `/arm_controller/command` (`trajectory_msgs/JointTrajectory`)
+- **Action**: `/arm_controller/follow_joint_trajectory` (`control_msgs/FollowJointTrajectoryAction`)
+- **MoveIt**: Uses MoveGroup interface
 
 ## Notes
-- The robot model and simulation setup rely on the `seven_dof_arm_gazebo` package from [Mastering ROS for Robotics Programming - Third Edition](https://github.com/PacktPublishing/Mastering-ROS-for-Robotics-Programming-Third-edition). Ensure it is properly installed and configured.
-- Invalid joint numbers or angles will result in an error message and node termination.
-- The subscriber currently outputs only `elbow_pitch_joint`. Modify the code to monitor all joints if needed.
-
-## Future Improvements
-- **Multi-Joint Control**: Extend the publisher to control multiple joints simultaneously.
-- **Enhanced State Output**: Update the subscriber to display all joint states.
-- **Launch File**: Add a launch file to run both nodes together.
+- The robot model, Gazebo simulation, and MoveIt configuration are provided by the [ros-industrial/universal_robot](https://github.com/ros-industrial/universal_robot) package.
+- Refer to comments and code in each example source file.
+- Gazebo/MoveIt environment must be properly set up and running before executing the example nodes in this package.
 
 ## License
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+MIT License (see LICENSE file)
 
-## Contributing
-Bug reports or suggestions are welcome via [issues](https://github.com/IRaC-Lab/test_joint_control_gazebo/issues) or pull requests!
+## Issues & Contributions
+Issues and pull requests are welcome!
