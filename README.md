@@ -65,9 +65,9 @@ source devel/setup.bash
 ### 1. Launch Gazebo Simulation and MoveIt (using universal_robot)
 - Use the launch files provided by the `universal_robot` package for Gazebo simulation and MoveIt configuration. For example:
 ```bash
-roslaunch ur_gazebo ur5e.launch
+roslaunch ur_gazebo ur3_bringup.launch
 # or for MoveIt
-roslaunch ur5e_moveit_config ur5e_moveit_planning_execution.launch
+roslaunch ur3_moveit_config ur3_moveit_planning_execution.launch sim:=true
 ```
 - Make sure the correct robot model (e.g., ur5e, ur10, etc.) is specified as needed.
 
